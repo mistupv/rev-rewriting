@@ -12,3 +12,4 @@ writeRules([R|Rs]) :-
   writeln(R),
   writeRules(Rs).
 
+
