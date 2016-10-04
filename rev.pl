@@ -20,7 +20,7 @@ parse(PT) :-
 %  prettyTRS(X),
 %  assertTRS(X).
   
-assertTRS(ctrs(V,R)) :-
+assertTRS(ctrs(_,R)) :-
   R = rules(Rs),
 %  assertVars(V),
   assertRules(Rs).
@@ -55,14 +55,14 @@ post(rule(X,Y,Z),Vs,Fs,rule(X2,Y2,Z2)) :-
   post(X,Vs,Fs,X2),
   post(Y,Vs,Fs,Y2),
   post(Z,Vs,Fs,Z2).
-post(term(X),Vs,_,vars(X)) :-
-  member(X,Vs).
-post(term(X),Vs,_,ground(X)) :-
-  \+ member(X,Vs).
-post(term(X,Y),Vs,Fs,funs(X,Z)) :-
+post(term(X,Y),Vs,Fs,var(X,Z)) :-
+  member(X,Vs),
+  post(Y,Vs,Fs,Z).
+post(term(X,Y),Vs,Fs,fun(X,Z)) :-
   member(X,Fs),
   post(Y,Vs,Fs,Z).
 post(term(X,Y),Vs,Fs,cons(X,Z)) :-
+  \+ member(X,Vs),
   \+ member(X,Fs),
   post(Y,Vs,Fs,Z).
 post(cond(X,Y),Vs,Fs,cond(X2,Y2)) :-
@@ -76,3 +76,5 @@ pos(cons(_,X), [P|Ps]) :-
 pos(funs(_,X), [P|Ps]) :- 
   nth1(P,X,T),
   pos(T,Ps).
+
+

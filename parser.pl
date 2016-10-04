@@ -51,10 +51,10 @@ cond(cond(X,Y)) -->
   term(X),
   [punct("-"),punct(">")],
   term(Y).
-cond(cond(X,Y)) --> 
-  term(X),
-  [punct("-"),punct(">"),punct("<"),punct("-")],
-  term(Y).
+%cond(cond(X,Y)) --> 
+%  term(X),
+%  [punct("-"),punct(">"),punct("<"),punct("-")],
+%  term(Y).
 
 rule_ast([]) --> [].
 rule_ast([H|T]) --> rule(H),rule_ast(T).
@@ -73,7 +73,7 @@ rule(rule(X,Y,Z)) -->
   [punct("|")],
   condlist(Z).
 
-term(term(X)) -->
+term(term(X,[])) -->
   id(X).
 term(term(X,[])) -->
   id(X),
