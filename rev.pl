@@ -15,13 +15,14 @@ parse(PT) :-
   phrase(program(T),CleanToks),
   vars(T,Vs),
   funs(T,Fs),
-  post(T,Vs,Fs,PT).
+  post(T,Vs,Fs,PT),
+  assertTRS(PT).
 %  prettyTRS(X),
 %  assertTRS(X).
   
 assertTRS(ctrs(V,R)) :-
-  R =.. [rules|Rs],
-  assertVars(V),
+  R = rules(Rs),
+%  assertVars(V),
   assertRules(Rs).
 
 assertVars(V) :- assertz(V).
