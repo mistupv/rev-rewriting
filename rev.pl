@@ -42,11 +42,11 @@ funs([rule(term(_),_,_)|Rs],Fs) :-
 funs([rule(term(F,_),_,_)|Rs],[F|Fs]) :-
   funs(Rs,Fs).
 
+post([],_,_,[]).
 post(ctrs(X,Y),Vs,Fs,ctrs(X,Y2)) :-
   post(Y,Vs,Fs,Y2).
 post(rules(X),Vs,Fs,rules(X2)) :-
   post(X,Vs,Fs,X2).
-post([],_,_,[]).
 post([R|Rs],Vs,Fs,[R2|Rs2]) :-
   post(R,Vs,Fs,R2),
   post(Rs,Vs,Fs,Rs2).

@@ -75,7 +75,7 @@ rule(rule(X,Y,Z)) -->
 
 term(term(X)) -->
   id(X).
-term(term(X)) -->
+term(term(X,[])) -->
   id(X),
   [punct("(")],
   [punct(")")].
