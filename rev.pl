@@ -69,12 +69,4 @@ post(cond(X,Y),Vs,Fs,cond(X2,Y2)) :-
   post(X,Vs,Fs,X2),
   post(Y,Vs,Fs,Y2).
 
-pos(_,[]).
-pos(cons(_,X), [P|Ps]) :-
-  nth1(P,X,T),
-  pos(T,Ps).
-pos(funs(_,X), [P|Ps]) :- 
-  nth1(P,X,T),
-  pos(T,Ps).
-
 
