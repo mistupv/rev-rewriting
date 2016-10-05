@@ -15,8 +15,8 @@ parse(PT) :-
   phrase(program(T),CleanToks),
   vars(T,Vs),
   funs(T,Fs),
-  post(T,Vs,Fs,PT),
-  assertTRS(PT).
+  post(T,Vs,Fs,PT).
+%  assertTRS(PT).
 %  prettyTRS(X),
 %  assertTRS(X).
   
@@ -38,23 +38,18 @@ funs(ctrs(_,rules(Rs)),Fs) :-
   funs(Rs,Ls),
   list_to_set(Ls,Fs).
 funs([],[]).
-funs([rule(term(_),_,_)|Rs],Fs) :-
-  funs(Rs,Fs).
-funs([rule(term(F,_),_,_)|Rs],[F|Fs]) :-
+funs([rule(_,term(F,_),_,_)|Rs],[F|Fs]) :-
   funs(Rs,Fs).
 
+% post/4
 post([],_,_,[]).
 post(ctrs(X,Y),Vs,Fs,ctrs(X,Y2)) :-
   post(Y,Vs,Fs,Y2).
 post(rules(X),Vs,Fs,rules(X2)) :-
-  post(X,Vs,Fs,X2).
+  post(X,Vs,Fs,X2,1).
 post([R|Rs],Vs,Fs,[R2|Rs2]) :-
   post(R,Vs,Fs,R2),
   post(Rs,Vs,Fs,Rs2).
-post(rule(X,Y,Z),Vs,Fs,rule(X2,Y2,Z2)) :-
-  post(X,Vs,Fs,X2),
-  post(Y,Vs,Fs,Y2),
-  post(Z,Vs,Fs,Z2).
 post(term(X,Y),Vs,Fs,var(X,Z)) :-
   member(X,Vs),
   post(Y,Vs,Fs,Z).
@@ -69,4 +64,16 @@ post(cond(X,Y),Vs,Fs,cond(X2,Y2)) :-
   post(X,Vs,Fs,X2),
   post(Y,Vs,Fs,Y2).
 
+% post/5
+post([],_,_,[],_).
+post(beta(void),_,_,beta(N),N).
+post([R|Rs],Vs,Fs,[R2|Rs2],N1) :-
+  N2 is N1 + 1,
+  post(R,Vs,Fs,R2,N1),
+  post(Rs,Vs,Fs,Rs2,N2).
+post(rule(B,X,Y,Z),Vs,Fs,rule(B2,X2,Y2,Z2),N) :-
+  post(X,Vs,Fs,X2),
+  post(Y,Vs,Fs,Y2),
+  post(Z,Vs,Fs,Z2),
+  post(B,Vs,Fs,B2,N).
 

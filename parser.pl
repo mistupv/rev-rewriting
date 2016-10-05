@@ -59,13 +59,13 @@ cond(cond(X,Y)) -->
 rule_ast([]) --> [].
 rule_ast([H|T]) --> rule(H),rule_ast(T).
 
-rule(rule(X,Y,[])) -->
+rule(rule(beta(void),X,Y,[])) -->
   term(X),
   [punct("-")],
   [punct(">")],
   term(Y).
 
-rule(rule(X,Y,Z)) -->
+rule(rule(beta(void),X,Y,Z)) -->
   term(X),
   [punct("-")],
   [punct(">")],
