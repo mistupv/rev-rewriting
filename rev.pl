@@ -8,14 +8,15 @@
 :- dynamic(fun/1).
 
 
-parse(PT) :- 
+parse :- 
   tokenize_file('example.trs',Tokens,[cased(true),spaces(false),to(strings)]),
   lists:subtract(Tokens,[cntrl("\n")],CleanToks),
   %write(CleanToks). % for tokenizer debugging
   phrase(program(T),CleanToks),
   vars(T,Vs),
   funs(T,Fs),
-  post(T,Vs,Fs,PT).
+  post(T,Vs,Fs,PT),
+  pretty(PT).
 %  assertTRS(PT).
 %  prettyTRS(X),
 %  assertTRS(X).

@@ -6,7 +6,7 @@
   plus(s(0),y) -> s(y)
   plus(0,y) -> y
 
-  ack(0,y) -> s(y) | true -> true
+  ack(0,y) -> s(y) | true -> true, true -> true
   ack(s(x),0) -> ack(x,s(0))
   ack(s(x),s(y)) -> ack(x,plus(y,ack(s(x),y)))
 )
