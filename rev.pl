@@ -99,9 +99,6 @@ is_basic(cond(L,R)) :-
   is_basic(R).
 is_basic(fun(_,Ts)) :-
   is_cons(Ts).
-is_basic(cons(_,Ts)) :-
-  is_cons(Ts).
-is_basic(var(_,_)).
 
 is_cons([]).
 is_cons([T|Ts]) :-
