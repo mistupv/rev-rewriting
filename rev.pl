@@ -77,3 +77,36 @@ post(rule(B,X,Y,Z),Vs,Fs,rule(B2,X2,Y2,Z2),N) :-
   post(Z,Vs,Fs,Z2),
   post(B,Vs,Fs,B2,N).
 
+%flatten(Rule,Flatrule) :-
+%  \+ is_flat(Rule),
+%  flatten_rule(Rule,Flatrule).
+%
+%flatten(Rule,Rule) :-
+%  is_flat(Rule).
+
+%is_flat(rule(_,_,R,C)) :-
+%  (is_basic(R);is_cons(R)),
+
+%flatten_rule(rule(B,L,R,C),rule(B,L2,R2,C2)) :-
+%  flatten_
+
+is_basic(rule(_,_,R,C)) :-
+  is_basic(R),
+  is_basic(C).
+is_basic(cond(L,R)) :-
+  is_basic(L),
+  is_basic(R).
+is_basic(fun(_,Ts)) :-
+  is_cons(Ts).
+is_basic(cons(_,Ts)) :-
+  is_cons(Ts).
+is_basic(var(_,_)).
+
+is_cons([]).
+is_cons([T|Ts]) :-
+  is_cons(T),
+  is_cons(Ts).
+is_cons(cons(_,[])).
+is_cons(cons(_,Ts)) :-
+  is_cons(Ts).
+is_cons(var(_,_)).
