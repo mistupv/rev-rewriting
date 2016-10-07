@@ -6,6 +6,7 @@
 :- dynamic(vars/1).
 :- dynamic(rule/3).
 :- dynamic(fun/1).
+:- dynamic(fresh_vars/1).
 
 
 parse :- 
@@ -135,7 +136,27 @@ flatten_bot(T,T2,C) :-
 flatten_bot(T,T,[]) :-
   T = var(_,_).
 
-fresh_var(var("fresh",[])).
+fresh_var(Var) :-
+  \+ fresh_vars(_),
+  Nvar = "X_0",
+  Var = var(Nvar,[]),
+  assertz(fresh_vars([Nvar])).
+
+fresh_var(Var) :-
+  fresh_vars(Ls),
+  last(Ls,NLastVar),
+  split_fresh(NLastVar,NStr),
+  number_string(N,NStr),
+  N1 is N + 1,
+  number_string(N1,N1Str),
+  split_fresh(NNewVar,N1Str),
+  Var = var(NNewVar,[]),
+  append(Ls,[NNewVar],NewLs),
+  retract(fresh_vars(_)),
+  assertz(fresh_vars(NewLs)).
+
+split_fresh(Str,N) :-
+  string_concat("X_",N,Str).
 
 flatten_conds([],[]).
 flatten_conds([C|Cs],[C2|Cs3]) :-
