@@ -87,8 +87,8 @@ flatten_rules([R|Rs],[R2|Rs2]) :-
 
 flatten_rule(rule(B,L,R,C),rule(B,L,R2,C3)) :-
   flatten_rhs(R,R2,NewCs),
-  append(C,NewCs,C3).%C2).%,
-%  flatten_conds(C2,C3).
+  append(C,NewCs,C2),
+  flatten_conds(C2,C3).
 
 flatten_rhs(T,T2,Cs) :-
   flatten_top(T,T2,Cs).
