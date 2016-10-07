@@ -16,7 +16,8 @@ pos(funs(_,X), [P|Ps]) :-
   pos(T,Ps).
 
 pretty(ctrs(_,R)) :-
-  pretty(R).
+  pretty(R),
+  nl.
 pretty(rules(Rs)) :-
   pretty(Rs).
 pretty([]).
