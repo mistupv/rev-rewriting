@@ -9,7 +9,7 @@
 :- dynamic(fresh_vars/1).
 
 
-parse :- 
+parse(FT) :- 
   tokenize_file('example.trs',Tokens,[cased(true),spaces(false),to(strings)]),
   lists:subtract(Tokens,[cntrl("\n")],CleanToks),
   %write(CleanToks). % for tokenizer debugging
@@ -159,10 +159,12 @@ split_fresh(Str,N) :-
   string_concat("X_",N,Str).
 
 flatten_conds([],[]).
-flatten_conds([C|Cs],[C2|Cs3]) :-
+flatten_conds([C|Cs],Cs4) :-
   flatten_cond(C,C2,NewCs),
-  append(Cs,NewCs,Cs2),
-  flatten_conds(Cs2,Cs3).
+  flatten_conds(NewCs,NewCs2),
+  flatten_conds(Cs,Cs3),
+  append(NewCs2,[C2],NewCs3),
+  append(NewCs3,Cs3,Cs4).
 
 flatten_cond(cond(X,Y),cond(X2,Y2),Cs) :-
   flatten_top(X,X2,NewCs),
