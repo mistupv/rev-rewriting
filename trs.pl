@@ -8,22 +8,18 @@ unify([(var(N,_),var(N,_))|Rest],L) :-
 
 % orient
 unify([(Expr,var(N,Args))|Rest],L) :- 
-  \+ Expr = var(N,Args),
+  \+ Expr = var(_,_),
   !, unify([(var(N,Args),Expr)|Rest],L).
 
-% occurs check
-unify([(var(N,Args),Expr)|_Rest],failure) :- 
-  %\+ Expr = var(N,Args),
-  vars(Expr,Vs),
-  member(N,Vs).
-
 unify([(var(N,Args),Expr)|Rest],L) :- 
-  vars(Expr,Vs),
-  \+ member(N,Vs),
-  !,unify(Rest,L1),
+  !, substituteEqList((var(N,Args),Expr),Rest,Rest1),
+  unify(Rest1,L1),
   compose(success([(var(N,Args),Expr)]),L1,L).
 
 unify([(fun(N,Args),fun(N,Args1))|Rest],L) :- 
+  length(Args, Len1),
+  length(Args1,Len2),
+  Len1 =:= Len2,
 	!, zip(Args,Args1,L1),
 	append(L1,Rest,L2),
 	unify(L2,L).
@@ -76,19 +72,14 @@ substituteVar_args(Bind,[E|R],[VE|VR]) :-
 	substituteVar(Bind,E,VE),
 	substituteVar_args(Bind,R,VR).
 
-%substituteEqList(_,[],[]).
-%substituteEqList(Var,[Exp|Rest],[VExp|VRest]) :-
-%	substituteEq(Var,Exp,VExp),
-%	substituteEqList(Var,Rest,VRest).
-%
-%substituteEq(Bind,(Exp1,Exp2,Occ),(BExp1,BExp2,Occ)) :-
-%	substituteVar(Bind,Exp1,BExp1),
-%	substituteVar(Bind,Exp2,BExp2).
-%
-%substitute_args(_,[],[]).
-%substitute_args(S,[E|R],[ES|RS]) :-
-%	substitute(S,E,ES),
-%	substitute_args(S,R,RS).
+substituteEqList(_,[],[]).
+substituteEqList(Var,[Exp|Rest],[VExp|VRest]) :-
+	substituteEq(Var,Exp,VExp),
+	substituteEqList(Var,Rest,VRest).
+
+substituteEq(Bind,(Exp1,Exp2),(BExp1,BExp2)) :-
+	substituteVar(Bind,Exp1,BExp1),
+	substituteVar(Bind,Exp2,BExp2).
 
 vars_in_args([],[]).
 vars_in_args([A|As],[V|Vs]) :-
@@ -101,7 +92,7 @@ vars_in(cons(_,Args),Vs) :-
 vars_in(fun(_,Args),Vs) :-
   vars_in_args(Args,Vs).
  
-vars(var(N,_),[N]).
+vars(var(_,_),[]).
 vars(Expr,Vs) :-
   \+ Expr = var(_,_),
   vars_in(Expr,Vs).
