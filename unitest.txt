@@ -1,5 +1,5 @@
 unify([(cons("a",[]),cons("a",[]))],X).
 unify([(cons("a",[]),cons("b",[]))],X).
 unify([(var("x",[]),var("x",[]))],X).
-unify([(var("x",[]),cons("true",[]))],X).
-unify([(var("x",[]),cons("s",[var("x",[])]))],X).
+unify([(var("x",[]),cons("a",[]))],X).
+unify([(var("x",[]),var("y",[]))],X).
