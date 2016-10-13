@@ -24,16 +24,17 @@ unify([(fun(N,Args),fun(N,Args1))|Rest],L) :-
 	append(L1,Rest,L2),
 	unify(L2,L).
 
-unify([(fun(_,_),fun(_,_),_)|_],failure).
+unify([(fun(_,_),fun(_,_))|_],failure).
 
 unify([(cons(N,Args),cons(N,Args1))|Rest],L) :-
 	!, zip(Args,Args1,L1),
 	append(L1,Rest,L2),
   unify(L2,L).
 	
-unify([(cons(_,_),cons(_,_),_)|_],failure).
+unify([(cons(_,_),cons(_,_))|_],failure).
 
 compose(success(_),failure,failure).
+%compose(failure,success(_),failure).
 compose(success(H),success(T),success(HT)) :-
   compose_subs(H,T,HT).
 
