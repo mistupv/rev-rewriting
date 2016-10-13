@@ -34,7 +34,6 @@ unify([(cons(N,Args),cons(N,Args1))|Rest],L) :-
 unify([(cons(_,_),cons(_,_))|_],failure).
 
 compose(success(_),failure,failure).
-%compose(failure,success(_),failure).
 compose(success(H),success(T),success(HT)) :-
   compose_subs(H,T,HT).
 
