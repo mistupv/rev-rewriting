@@ -19,7 +19,9 @@ parse(FT) :-
   post(T,Vs,Fs,PT),
   pretty(PT),
   flatten_ctrs(PT,FT),
-  pretty(FT).
+  pretty(FT).%,
+  % convert to basic c-DCTRS,
+  %pretty(CT),
   
 assertTRS(ctrs(_,R)) :-
   R = rules(Rs),
@@ -136,6 +138,29 @@ flatten_bot(T,T2,C) :-
 flatten_bot(T,T,[]) :-
   T = var(_,_).
 
+inj_ctrs(ctrs(V,R),ctrs(V,R2)) :-
+  inj_rules(R,R2).
+
+inj_rules([],[]).
+inj_rules([R|Rs],[R2,Rs2]) :-
+  inj_rule(R,R2),
+  inj_rules(Rs,Rs2).
+
+inj_rule(rule(B,L,R,C),rule(B,L,R2,C2)) :-
+  erased_vars(L,R,C,EVars),
+  inj_conds(C,C2,NVars),
+  inj_rhs(R,B,EVars,NVars,R2).
+
+inj_conds([],[],[]).
+inj_conds([C|Cs],[C2|Cs2],[V|Vs]) :-
+  inj_cond(C,C2,V),
+  inj_conds(Cs,Cs2,Vs).
+
+inj_rhs(R,beta(N),EVars,NVars,tuple(R,cons(Label,Vars))) :-
+  number_string(N,NStr),
+  string_concat("B_",NStr,Label),
+  append(EVars,NVars,Vars).
+  
 fresh_var(Var) :-
   \+ fresh_vars(_),
   Nvar = "X_0",
