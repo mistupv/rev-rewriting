@@ -35,8 +35,6 @@ assertRules([R|Rs]) :-
   assertz(R),
   assertRules(Rs).
 
-vars(ctrs(vars(Vs),_),Vs).
-
 funs(ctrs(_,rules(Rs)),Fs) :-
   funs(Rs,Ls),
   list_to_set(Ls,Fs).
