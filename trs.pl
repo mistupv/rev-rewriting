@@ -61,7 +61,7 @@ substitute_argsargs(S,[A|R],[AS|RS]) :-
 	substitute_argsargs(S,R,RS).
 
 substituteVar((var(N,Args),Expr),var(N,Args),Expr) :- !.
-substituteVar((var(_),_),var(M,Args),v(M,Args)).
+substituteVar((var(_,_),_),var(M,Args),var(M,Args)).
 substituteVar(Bind,cons(F,Args),cons(F,VArgs)) :- 
 	substituteVar_args(Bind,Args,VArgs).
 substituteVar(Bind,fun(F,Args),fun(F,VArgs)) :- 
