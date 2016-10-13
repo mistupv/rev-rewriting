@@ -1,0 +1,16 @@
+unify([(cons("a",[]),cons("a",[]))],X).
+unify([(cons("a",[]),cons("b",[]))],X).
+unify([(var("x",[]),var("x",[]))],X).
+unify([(var("x",[]),cons("a",[]))],X).
+unify([(var("x",[]),var("y",[]))],X).
+unify([(fun("f",[cons("a",[]),var("x",[])]),fun("f",[cons("a",[]),cons("b",[])]))],X).
+unify([(fun("f",[cons("a",[])]),fun("g",[cons("a",[])]))],X).
+unify([(fun("f",[var("x",[])]),fun("f",[var("y",[])]))],X).
+unify([(fun("f",[var("x",[])]),fun("g",[var("y",[])]))],X).
+unify([(fun("f",[var("x",[])]),fun("f",[var("y",[]),var("z",[])]))],X).
+unify([(fun("f",[fun("g",[var("x",[])])]),fun("f",[var("y",[])]))],X).
+unify([(fun("f",[fun("g",[var("x",[])]),var("x",[])]),fun("f",[var("y",[]),cons("a",[])]))],X).
+unify([(var("x",[]),fun("f",[var("x",[])]))],X).
+unify([(var("x",[]),var("y",[])),(var("y",[]),cons("a",[]))],X).
+unify([(cons("a",[]),var("y",[])),(var("x",[]),var("y",[]))],X).
+unify([(var("x",[]),cons("a",[])),(cons("b",[]),var("x",[]))],X).
