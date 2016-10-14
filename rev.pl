@@ -197,6 +197,44 @@ erased_cond_lhs([cond(L,_)|Cs],[RVars|NRVars],[EVars|NEVars]) :-
   substract(LVars,RVars,EVars),
   erased_cond_lhs(Cs,NRVars,NEVars).
 
+inv_ctrs(ctrs(_,R)) :-
+  inv_rules(R).
+
+inv_rules([],[]).
+inv_rules([R|Rs],[R2|Rs2]) :-
+  inv_rule(R,R2),
+  inv_rules(Rs,Rs2).
+
+inv_rule(rule(B,L,R,C),rule(B,IL,IR,IC)) :-
+  swap_equation((L,R),(IL,IR))
+  inv_conds(C,IC).
+
+inv_conds(Cs,ICs) :-
+  swap_conds(Cs,SCs),
+  reverse(SCs,ICs).
+
+swap_conds([],[]).
+swap_conds([cond(L,R)|Cs],[cond(L2,R2)|Cs2]) :-
+  swap_equation((L,R),(IL,IR)),
+  swap_conds(Cs,Cs2).
+  
+swap_equation((L,R),(IL,IR)) :-
+  extract_from_tuple(R,RArgs),
+  push_into_args(L,S0Args,RArgs,IL),
+  extract_args(L,LArgs),
+  append([tuple],LArgs,TmpLArgs),
+  NewLArgs =.. TmpLArgs,
+  push_into_args(R,_,NewLArgs,IR),
+ 
+push_into_args(fun(N,OArgs),OArgs,NArgs,fun(N,NArgs)).
+push_into_args(cons(N,OArgs),OArgs,NArgs,fun(N,NArgs)).
+
+extract_args(fun(_,Args),Args).
+extract_args(cons(_,Args),Args).
+
+extract_from_tuple(tuple(T1,T2),T3) :-
+  append([T1],[T2],T3).
+
 fresh_var(Var) :-
   \+ fresh_vars(_),
   Nvar = "X_0",
