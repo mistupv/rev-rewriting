@@ -154,11 +154,49 @@ inj_conds([C|Cs],[C2|Cs2],[V|Vs]) :-
   inj_cond(C,C2,V),
   inj_conds(Cs,Cs2,Vs).
 
+inj_cond(cond(L,R),cond(L,tuple(R,Var)),Var) :-
+  fresh_var(Var).
+
 inj_rhs(R,beta(N),EVars,NVars,tuple(R,cons(Label,Vars))) :-
   number_string(N,NStr),
   string_concat("B_",NStr,Label),
   append(EVars,NVars,Vars).
   
+erased_vars(L,R,C,EVars) :-
+  erased_lhs_vars(L,R,C,ELVars),
+  erased_cond_vars(R,C,ECVars).
+  append(ELVars,ECVars,EVars).
+
+erased_lhs_vars(L,R,C,ELVars) :-
+  vars_from(L,VarsL),
+  vars_from(R,VarsR),
+  vars_from_ls(C,VarsC),
+  append(VarsR,VarsC,VarsRC),
+  subtract(VarsL,VarsRC,ELVars).
+
+erased_cond_vars(R,C,ECVars) :-
+  vars_next_array(C,SVars),
+  vars_from(R,RVars),
+  append(SVars,RVars,SRVars),
+  reverse(SRVars,RSVars),
+  erased_cond_lhs(C,RSVars,ECVars).
+
+vars_next_array([],[]).
+vars_next_array([C|Cs],Vs) :-
+  vars_array(Cs,[],Vs).
+  
+vars_array([],_,[]).
+vars_array([cond(_,R)|Cs],AccVars,[NAccVars|NextVars]).
+  vars_from(R,RVars),
+  append(AccVars,RVars,NAccVars),
+  vars_array(Cs,NAccVars,NextVars).
+
+erased_cond_lhs([],[]).
+erased_cond_lhs([cond(L,_)|Cs],[RVars|NRVars],[EVars|NEVars]) :-
+  vars_from(L,LVars),
+  substract(LVars,RVars,EVars),
+  erased_cond_lhs(Cs,NRVars,NEVars).
+
 fresh_var(Var) :-
   \+ fresh_vars(_),
   Nvar = "X_0",
