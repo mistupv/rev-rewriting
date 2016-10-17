@@ -38,9 +38,11 @@ pretty(cond(L,R)) :-
   pretty(L),
   format(" ->> "),
   pretty(R).
-pretty(fun(N,Ts)) :-
+pretty(fun(N,[])) :-
+  format("~s()",[N]).
+pretty(fun(N,[T|Ts])) :-
   format("~s(",[N]),
-  pretty_args(Ts),
+  pretty_args([T|Ts]),
   format(")").
 pretty(cons(N,[])) :-
   format("~s",[N]).
