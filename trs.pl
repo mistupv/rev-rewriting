@@ -1,5 +1,6 @@
-%:- module(trs,
-%         [unify/2]).
+:- module(trs,
+         [unify/2,
+          substitute/3]).
 
 unify([],success([])).
 

@@ -1,5 +1,6 @@
 :- use_module(utils).
 :- use_module(parser).
+:- use_module(trs).
 
 :- use_module(library(tokenize)).
 
@@ -17,9 +18,10 @@ parse :-
   pretty(PT),
   format("Flattened TRS:"),nl,
   flatten_ctrs(PT,FT),
-  pretty(FT).
-  % convert to basic c-DCTRS,
-  %pretty(CT),
+  pretty(FT),
+  format("Constructor TRS:"),nl,
+  cons_ctrs(FT,CT),
+  pretty(CT).
 %  format("Injectivized TRS:"),nl,
 %  inj_ctrs(FT,InjT),
 %  pretty(InjT),
@@ -142,11 +144,58 @@ flatten_bot(T,T2,C) :-
 flatten_bot(T,T,[]) :-
   T = var(_,_).
 
+cons_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
+%trace,
+  cons_rules(R,R2).
+
+cons_rules([],[]).
+cons_rules([R|Rs],[R2|Rs2]) :-
+  cons_rule(R,R2,success),
+  cons_rules(Rs,Rs2).
+cons_rules([R|Rs],Rs2) :-
+  cons_rule(R,_,failure),
+  cons_rules(Rs,Rs2).
+
+
+
+cons_rule(rule(B,L,R,C),rule(B,L,R,C),success) :-
+  replace_conds(C,C,success([])).
+cons_rule(rule(B,L,R,C),rule(B,L3,R3,C4),Res2) :-
+  replace_conds(C,C2,success(Subs)),
+  substitute(Subs,L,L2),
+  substitute(Subs,R,R2),
+  substitute_conds(Subs,C2,C3),
+  cons_rule(rule(B,L2,R2,C3),rule(B,L3,R3,C4),Res2).
+cons_rule(rule(_,_,_,C),_,failure) :-
+  replace_conds(C,_,failure).
+
+substitute_conds(_,[],[]).
+substitute_conds(Subs,[cond(L,R)|Cs],[cond(L2,R2)|Cs2]) :-
+  substitute(Subs,L,L2),
+  substitute(Subs,R,R2),
+  substitute_conds(Subs,Cs,Cs2).
+
+replace_conds([],[],success([])).
+replace_conds([cond(L,R)|Cs],[cond(L,R)|Cs2],Res) :-
+  is_basic(L),
+%  is_cons(R),
+  replace_conds(Cs,Cs2,Res).
+
+replace_conds([cond(L,R)|_],_,failure) :-
+  \+ is_basic(L),
+%  is_cons(R),
+  unify([(L,R)],failure).
+
+replace_conds([cond(L,R)|Cs],Cs,success(Subs)) :-
+  \+ is_basic(L),
+%  is_cons(R),
+  unify([(L,R)],success(Subs)).
+
 inj_ctrs(ctrs(V,R),ctrs(V,R2)) :-
   inj_rules(R,R2).
 
 inj_rules([],[]).
-inj_rules([R|Rs],[R2,Rs2]) :-
+inj_rules([R|Rs],[R2|Rs2]) :-
   inj_rule(R,R2),
   inj_rules(Rs,Rs2).
 
@@ -289,3 +338,4 @@ is_cons(var(_,_)).
 is_cons(cons(_,[])).
 is_cons(cons(_,[T|Ts])) :-
   is_cons_list([T|Ts]).
+
