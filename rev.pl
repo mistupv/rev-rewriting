@@ -3,13 +3,10 @@
 
 :- use_module(library(tokenize)).
 
-:- dynamic(vars/1).
-:- dynamic(rule/3).
-:- dynamic(fun/1).
 :- dynamic(fresh_vars/1).
 
 
-parse(FT) :- 
+parse :- 
   tokenize_file('example.trs',Tokens,[cased(true),spaces(false),to(strings)]),
   lists:subtract(Tokens,[cntrl("\n")],CleanToks),
   %write(CleanToks). % for tokenizer debugging
@@ -18,11 +15,18 @@ parse(FT) :-
   funs(T,Fs),
   post(T,Vs,Fs,PT),
   pretty(PT),
+  format("Flattened TRS:"),nl,
   flatten_ctrs(PT,FT),
-  pretty(FT).%,
+  pretty(FT).
   % convert to basic c-DCTRS,
   %pretty(CT),
-  
+%  format("Injectivized TRS:"),nl,
+%  inj_ctrs(FT,InjT),
+%  pretty(InjT),
+%  format("Inverted TRS:"),nl,
+%  inv_ctrs(InjT,InvT),
+%  pretty(InvT).
+
 assertTRS(ctrs(_,R)) :-
   R = rules(Rs),
 %  assertVars(V),
@@ -34,6 +38,8 @@ assertRules([]).
 assertRules([R|Rs]) :-
   assertz(R),
   assertRules(Rs).
+
+vars(ctrs(Vs,_),Vs).
 
 funs(ctrs(_,rules(Rs)),Fs) :-
   funs(Rs,Ls),
@@ -164,7 +170,7 @@ inj_rhs(R,beta(N),EVars,NVars,tuple(R,cons(Label,Vars))) :-
   
 erased_vars(L,R,C,EVars) :-
   erased_lhs_vars(L,R,C,ELVars),
-  erased_cond_vars(R,C,ECVars).
+  erased_cond_vars(R,C,ECVars),
   append(ELVars,ECVars,EVars).
 
 erased_lhs_vars(L,R,C,ELVars) :-
@@ -182,11 +188,11 @@ erased_cond_vars(R,C,ECVars) :-
   erased_cond_lhs(C,RSVars,ECVars).
 
 vars_next_array([],[]).
-vars_next_array([C|Cs],Vs) :-
+vars_next_array([_|Cs],Vs) :-
   vars_array(Cs,[],Vs).
   
 vars_array([],_,[]).
-vars_array([cond(_,R)|Cs],AccVars,[NAccVars|NextVars]).
+vars_array([cond(_,R)|Cs],AccVars,[NAccVars|NextVars]) :-
   vars_from(R,RVars),
   append(AccVars,RVars,NAccVars),
   vars_array(Cs,NAccVars,NextVars).
@@ -197,8 +203,8 @@ erased_cond_lhs([cond(L,_)|Cs],[RVars|NRVars],[EVars|NEVars]) :-
   substract(LVars,RVars,EVars),
   erased_cond_lhs(Cs,NRVars,NEVars).
 
-inv_ctrs(ctrs(_,R)) :-
-  inv_rules(R).
+inv_ctrs(ctrs(V,R),ctrs(V,R2)) :-
+  inv_rules(R,R2).
 
 inv_rules([],[]).
 inv_rules([R|Rs],[R2|Rs2]) :-
@@ -206,7 +212,7 @@ inv_rules([R|Rs],[R2|Rs2]) :-
   inv_rules(Rs,Rs2).
 
 inv_rule(rule(B,L,R,C),rule(B,IL,IR,IC)) :-
-  swap_equation((L,R),(IL,IR))
+  swap_equation((L,R),(IL,IR)),
   inv_conds(C,IC).
 
 inv_conds(Cs,ICs) :-
@@ -214,17 +220,18 @@ inv_conds(Cs,ICs) :-
   reverse(SCs,ICs).
 
 swap_conds([],[]).
-swap_conds([cond(L,R)|Cs],[cond(L2,R2)|Cs2]) :-
+swap_conds([cond(L,R)|Cs],[cond(IL,IR)|Cs2]) :-
   swap_equation((L,R),(IL,IR)),
   swap_conds(Cs,Cs2).
   
-swap_equation((L,R),(IL,IR)) :-
-  extract_from_tuple(R,RArgs),
-  push_into_args(L,S0Args,RArgs,IL),
-  extract_args(L,LArgs),
-  append([tuple],LArgs,TmpLArgs),
-  NewLArgs =.. TmpLArgs,
-  push_into_args(R,_,NewLArgs,IR),
+%swap_equation((L,R),(IL,IR)) :-
+%  extract_from_tuple(R,RArgs),
+%%  check S0Args here (= LArgs?)
+%  push_into_args(L,S0Args,RArgs,IL),
+%  extract_args(L,LArgs),
+%  append([tuple],LArgs,TmpLArgs),
+%  NewLArgs =.. TmpLArgs,
+%  push_into_args(R,_,NewLArgs,IR),
  
 push_into_args(fun(N,OArgs),OArgs,NArgs,fun(N,NArgs)).
 push_into_args(cons(N,OArgs),OArgs,NArgs,fun(N,NArgs)).
@@ -236,7 +243,7 @@ extract_from_tuple(tuple(T1,T2),T3) :-
   append([T1],[T2],T3).
 
 fresh_var(Var) :-
-  \+ fresh_vars(_),
+  \+ fresh_vars(_),!,
   Nvar = "X_0",
   Var = var(Nvar,[]),
   assertz(fresh_vars([Nvar])).
@@ -251,7 +258,7 @@ fresh_var(Var) :-
   split_fresh(NNewVar,N1Str),
   Var = var(NNewVar,[]),
   append(Ls,[NNewVar],NewLs),
-  retract(fresh_vars(_)),
+  retract(fresh_vars(Ls)),
   assertz(fresh_vars(NewLs)).
 
 split_fresh(Str,N) :-
