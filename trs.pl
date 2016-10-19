@@ -1,6 +1,8 @@
 :- module(trs,
          [unify/2,
-          substitute/3]).
+          substitute/3,
+          vars_from/2,
+          vars_from_conds/2]).
 
 unify([],success([])).
 
@@ -101,4 +103,27 @@ vars(Expr,Vs) :-
 zip([],[],[]).
 zip([H1|T1],[H2|T2],[(H1,H2)|Rest]) :-
   zip(T1,T2,Rest).
+
+vars_from_ls([],[]).
+vars_from_ls([A|As],Vars) :-
+  vars_from(A,V),
+  vars_from_ls(As,Vs),
+  append(V,Vs,Vars).
+
+vars_from(var(N,Args),[var(N,Args)]).
+vars_from(fun(_,Args),VarsLs) :-
+  vars_from_ls(Args,VarsLs).
+vars_from(cons(_,Args),VarsLs) :-
+  vars_from_ls(Args,VarsLs).
+
+vars_from_cond(cond(L,R),CVars) :-
+  vars_from(L,LVars),
+  vars_from(R,RVars),
+  append(LVars,RVars,CVars).
+
+vars_from_conds([],[]).
+vars_from_conds([C|Cs],Vars) :-
+  vars_from_cond(C,CVars),
+  vars_from_conds(Cs,CsVars),
+  append(CVars,CsVars,Vars).
 
