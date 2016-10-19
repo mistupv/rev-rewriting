@@ -12,8 +12,8 @@ parse :-
   lists:subtract(Tokens,[cntrl("\n")],CleanToks),
   %write(CleanToks). % for tokenizer debugging
   phrase(program(T),CleanToks),
-  vars(T,Vs),
-  funs(T,Fs),
+  vars_ctrs(T,Vs),
+  funs_ctrs(T,Fs),
   post(T,Vs,Fs,PT),
   pretty(PT),
   format("Flattened TRS:"),nl,
@@ -41,14 +41,14 @@ assertRules([R|Rs]) :-
   assertz(R),
   assertRules(Rs).
 
-vars(ctrs(Vs,_),Vs).
+vars_ctrs(ctrs(vars(Vs),_),Vs).
 
-funs(ctrs(_,rules(Rs)),Fs) :-
-  funs(Rs,Ls),
+funs_ctrs(ctrs(_,rules(Rs)),Fs) :-
+  funs_ctrs(Rs,Ls),
   list_to_set(Ls,Fs).
-funs([],[]).
-funs([rule(_,term(F,_),_,_)|Rs],[F|Fs]) :-
-  funs(Rs,Fs).
+funs_ctrs([],[]).
+funs_ctrs([rule(_,term(F,_),_,_)|Rs],[F|Fs]) :-
+  funs_ctrs(Rs,Fs).
 
 % post/4
 post([],_,_,[]).
@@ -150,13 +150,11 @@ cons_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
 
 cons_rules([],[]).
 cons_rules([R|Rs],[R2|Rs2]) :-
-  cons_rule(R,R2,success),
+  cons_rule(R,R2,success),!,
   cons_rules(Rs,Rs2).
 cons_rules([R|Rs],Rs2) :-
   cons_rule(R,_,failure),
   cons_rules(Rs,Rs2).
-
-
 
 cons_rule(rule(B,L,R,C),rule(B,L,R,C),success) :-
   replace_conds(C,C,success([])).
