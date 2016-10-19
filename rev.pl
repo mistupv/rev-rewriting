@@ -21,10 +21,11 @@ parse :-
   pretty(FT),
   format("Constructor TRS:"),nl,
   cons_ctrs(FT,CT),
-  pretty(CT).
-%  format("Injectivized TRS:"),nl,
-%  inj_ctrs(FT,InjT),
-%  pretty(InjT),
+  pretty(CT),
+  format("Injectivized TRS:"),nl,
+%  trace,
+  inj_ctrs(CT,InjT),
+  pretty(InjT).
 %  format("Inverted TRS:"),nl,
 %  inv_ctrs(InjT,InvT),
 %  pretty(InvT).
@@ -145,7 +146,6 @@ flatten_bot(T,T,[]) :-
   T = var(_,_).
 
 cons_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
-%trace,
   cons_rules(R,R2).
 
 cons_rules([],[]).
@@ -189,7 +189,7 @@ replace_conds([cond(L,R)|Cs],Cs,success(Subs)) :-
 %  is_cons(R),
   unify([(L,R)],success(Subs)).
 
-inj_ctrs(ctrs(V,R),ctrs(V,R2)) :-
+inj_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
   inj_rules(R,R2).
 
 inj_rules([],[]).
@@ -223,31 +223,37 @@ erased_vars(L,R,C,EVars) :-
 erased_lhs_vars(L,R,C,ELVars) :-
   vars_from(L,VarsL),
   vars_from(R,VarsR),
-  vars_from_ls(C,VarsC),
+  vars_from_conds(C,VarsC),
   append(VarsR,VarsC,VarsRC),
   subtract(VarsL,VarsRC,ELVars).
 
 erased_cond_vars(R,C,ECVars) :-
-  vars_next_array(C,SVars),
-  vars_from(R,RVars),
-  append(SVars,RVars,SRVars),
-  reverse(SRVars,RSVars),
-  erased_cond_lhs(C,RSVars,ECVars).
+trace,
+  vars_from(R,RVars),       % Var(r)  
+  vars_next_array(C,SVars), % [Var(s_2),Var(s_3),...]
+  append([RVars],SVars,RSVars), % [Var(r),Var(s_2),Var(s_3),...]
+  acc_vars(RSVars,[],RSMVars). % [Var(r),Var(r,s_2),Var(r,s_2,s_3)]
+%  reverse(SRVars,RSVars),
+%  erased_cond_lhs(C,RSVars,ECVars).
 
 vars_next_array([],[]).
 vars_next_array([_|Cs],Vs) :-
-  vars_array(Cs,[],Vs).
+  vars_array(Cs,Vs).
   
-vars_array([],_,[]).
-vars_array([cond(_,R)|Cs],AccVars,[NAccVars|NextVars]) :-
+vars_array([],[]).
+vars_array([cond(_,R)|Cs],[RVars|Vs]) :-
   vars_from(R,RVars),
-  append(AccVars,RVars,NAccVars),
-  vars_array(Cs,NAccVars,NextVars).
+  vars_array(Cs,Vs).
+
+acc_vars([],_,[]).
+acc_vars([V|Vs],AccVars,[CurVars|NextVars]) :-
+  append(V,AccVars,CurVars),
+  acc_vars(Vs,CurVars,NextVars).
 
 erased_cond_lhs([],[]).
 erased_cond_lhs([cond(L,_)|Cs],[RVars|NRVars],[EVars|NEVars]) :-
   vars_from(L,LVars),
-  substract(LVars,RVars,EVars),
+  subtract(LVars,RVars,EVars),
   erased_cond_lhs(Cs,NRVars,NEVars).
 
 inv_ctrs(ctrs(V,R),ctrs(V,R2)) :-
