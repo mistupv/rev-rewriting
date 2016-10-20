@@ -23,12 +23,11 @@ parse :-
   cons_ctrs(FT,CT),
   pretty(CT),
   format("Injectivized TRS:"),nl,
-%  trace,
   inj_ctrs(CT,InjT),
-  pretty(InjT).
-%  format("Inverted TRS:"),nl,
-%  inv_ctrs(InjT,InvT),
-%  pretty(InvT).
+  pretty(InjT),
+  format("Inverted TRS:"),nl,
+  inv_ctrs(InjT,InvT),
+  pretty(InvT).
 
 assertTRS(ctrs(_,R)) :-
   R = rules(Rs),
@@ -257,7 +256,7 @@ erased_cond_lhs([cond(_,T)|Cs],[SRVars|NSRVars],REVars) :-
   erased_cond_lhs(Cs,NSRVars,NEVars),
   append(EVars,NEVars,REVars).
 
-inv_ctrs(ctrs(V,R),ctrs(V,R2)) :-
+inv_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
   inv_rules(R,R2).
 
 inv_rules([],[]).
@@ -278,20 +277,12 @@ swap_conds([cond(L,R)|Cs],[cond(IL,IR)|Cs2]) :-
   swap_equation((L,R),(IL,IR)),
   swap_conds(Cs,Cs2).
   
-%swap_equation((L,R),(IL,IR)) :-
-%  extract_from_tuple(R,RArgs),
-%%  check S0Args here (= LArgs?)
-%  push_into_args(L,S0Args,RArgs,IL),
-%  extract_args(L,LArgs),
-%  append([tuple],LArgs,TmpLArgs),
-%  NewLArgs =.. TmpLArgs,
-%  push_into_args(R,_,NewLArgs,IR),
+swap_equation((L,R),(IL,IR)) :-
+  extract_from_tuple(R,RArgs),
+  push_into_args(L,LArgs,RArgs,IL),
+  IR =.. [tuple|LArgs].
  
 push_into_args(fun(N,OArgs),OArgs,NArgs,fun(N,NArgs)).
-push_into_args(cons(N,OArgs),OArgs,NArgs,fun(N,NArgs)).
-
-extract_args(fun(_,Args),Args).
-extract_args(cons(_,Args),Args).
 
 extract_from_tuple(tuple(T1,T2),T3) :-
   append([T1],[T2],T3).
