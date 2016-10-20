@@ -227,22 +227,22 @@ erased_lhs_vars(L,R,C,ELVars) :-
   append(VarsR,VarsC,VarsRC),
   subtract(VarsL,VarsRC,ELVars).
 
+erased_cond_vars(_,[],[]).
 erased_cond_vars(R,C,ECVars) :-
-trace,
   vars_from(R,RVars),       % Var(r)  
   vars_next_array(C,SVars), % [Var(s_2),Var(s_3),...]
   append([RVars],SVars,RSVars), % [Var(r),Var(s_2),Var(s_3),...]
-  acc_vars(RSVars,[],RSMVars). % [Var(r),Var(r,s_2),Var(r,s_2,s_3)]
-%  reverse(SRVars,RSVars),
-%  erased_cond_lhs(C,RSVars,ECVars).
+  acc_vars(RSVars,[],RSMVars), % [Var(r),Var(r,s_2),Var(r,s_2,s_3),...]
+  reverse(RSMVars,SRMVars), % [...,Var(r,s_2,s_3),Var(r,s_2),Var(r)]
+  erased_cond_lhs(C,SRMVars,ECVars).
 
 vars_next_array([],[]).
 vars_next_array([_|Cs],Vs) :-
   vars_array(Cs,Vs).
   
 vars_array([],[]).
-vars_array([cond(_,R)|Cs],[RVars|Vs]) :-
-  vars_from(R,RVars),
+vars_array([cond(S,_)|Cs],[SVars|Vs]) :-
+  vars_from(S,SVars),
   vars_array(Cs,Vs).
 
 acc_vars([],_,[]).
@@ -250,11 +250,12 @@ acc_vars([V|Vs],AccVars,[CurVars|NextVars]) :-
   append(V,AccVars,CurVars),
   acc_vars(Vs,CurVars,NextVars).
 
-erased_cond_lhs([],[]).
-erased_cond_lhs([cond(L,_)|Cs],[RVars|NRVars],[EVars|NEVars]) :-
-  vars_from(L,LVars),
-  subtract(LVars,RVars,EVars),
-  erased_cond_lhs(Cs,NRVars,NEVars).
+erased_cond_lhs([],[],[]).
+erased_cond_lhs([cond(_,T)|Cs],[SRVars|NSRVars],REVars) :-
+  vars_from(T,TVars),
+  subtract(TVars,SRVars,EVars),
+  erased_cond_lhs(Cs,NSRVars,NEVars),
+  append(EVars,NEVars,REVars).
 
 inv_ctrs(ctrs(V,R),ctrs(V,R2)) :-
   inv_rules(R,R2).
