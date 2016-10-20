@@ -52,11 +52,10 @@ pretty(cons(N,[T|Ts])) :-
   format(")").
 pretty(var(N,_)) :-
   format("~s",[N]).
-pretty(tuple(T1,T2)) :-
+pretty(TupleArgs) :-
+  TupleArgs =.. [tuple|Args],
   format("<"),
-  pretty(T1),
-  format(","),
-  pretty(T2),
+  pretty_args(Args),
   format(">").
 
 pretty_args([]).
