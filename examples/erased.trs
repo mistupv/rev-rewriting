@@ -1,0 +1,7 @@
+(VAR x y)
+(RULES
+
+  erasing_lhs(x) -> 0
+  erasing_cnd(x) -> x | f(x) -> c(y)
+  f(x) -> x
+)

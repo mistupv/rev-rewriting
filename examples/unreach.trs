@@ -1,0 +1,6 @@
+(VAR x y)
+(RULES
+
+  unifiable(x) -> y | x -> y
+  unreach(x) -> x | a -> b
+)
