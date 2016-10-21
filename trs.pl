@@ -4,12 +4,15 @@
           vars_from/2,
           vars_from_conds/2]).
 
+%% unify([equation_pair],unif_result)
+%% tries to unify the equation pairs from a list
+%% and returns the mgu if unification is possible
+
 unify([],success([])).
 
 unify([(var(N,_),var(N,_))|Rest],L) :- 
 	!, unify(Rest,L).
 
-% orient
 unify([(Expr,var(N,Args))|Rest],L) :- 
   \+ Expr = var(_,_),
   !, unify([(var(N,Args),Expr)|Rest],L).
@@ -36,14 +39,22 @@ unify([(cons(N,Args),cons(N,Args1))|Rest],L) :-
 	
 unify([(cons(_,_),cons(_,_))|_],failure).
 
+%% compose(result1,result2,comp_result)
+%% compose two unification results
+
 compose(success(_),failure,failure).
 compose(success(H),success(T),success(HT)) :-
   compose_subs(H,T,HT).
+
 
 compose_subs([],S,S).
 compose_subs([(X1,Y1)|Rest],Subs,[(X1,Y1subs)|L]) :- 
 	substitute(Subs,Y1,Y1subs),
 	compose_subs(Rest,Subs,L).
+
+%% substitute(subs,exp,exp)
+%% applies a substitution to a given expression
+%% and returns the resulting expression
 
 substitute(S,var(N,Args),Expr) :-
 	memberchk((var(N,Args),Expr),S),!.
@@ -62,6 +73,10 @@ substitute_argsargs(S,[A|R],[AS|RS]) :-
 	substitute(S,A,AS),
 	substitute_argsargs(S,R,RS).
 
+%% substituteVar(binding,exp,exp)
+%% applies a binding to a given expression
+%% and returns the resulting expression
+
 substituteVar((var(N,Args),Expr),var(N,Args),Expr) :- !.
 substituteVar((var(_,_),_),var(M,Args),var(M,Args)).
 substituteVar(Bind,cons(F,Args),cons(F,VArgs)) :- 
@@ -75,6 +90,9 @@ substituteVar_args(Bind,[E|R],[VE|VR]) :-
 	substituteVar(Bind,E,VE),
 	substituteVar_args(Bind,R,VR).
 
+%% substituteEqList(binding,[equation_pair],[equation_pair])
+%% applies a binding to a list of equation pairs
+
 substituteEqList(_,[],[]).
 substituteEqList(Var,[Exp|Rest],[VExp|VRest]) :-
 	substituteEq(Var,Exp,VExp),
@@ -84,25 +102,29 @@ substituteEq(Bind,(Exp1,Exp2),(BExp1,BExp2)) :-
 	substituteVar(Bind,Exp1,BExp1),
 	substituteVar(Bind,Exp2,BExp2).
 
-vars_in_args([],[]).
-vars_in_args([A|As],[V|Vs]) :-
-  vars_in(A,V),
-  vars_in_args(As,Vs).
+%% vars(exp,list)
+%% returns the variables in expression
+%% returns [] if expression is a variable
+
+vars(var(_,_),[]).
+vars(Expr,Vs) :-
+  \+ Expr = var(_,_),
+  vars_in(Expr,Vs).
 
 vars_in(var(N,_),N).
 vars_in(cons(_,Args),Vs) :-
   vars_in_args(Args,Vs).
 vars_in(fun(_,Args),Vs) :-
   vars_in_args(Args,Vs).
- 
-vars(var(_,_),[]).
-vars(Expr,Vs) :-
-  \+ Expr = var(_,_),
-  vars_in(Expr,Vs).
 
-zip([],[],[]).
-zip([H1|T1],[H2|T2],[(H1,H2)|Rest]) :-
-  zip(T1,T2,Rest).
+vars_in_args([],[]).
+vars_in_args([A|As],[V|Vs]) :-
+  vars_in(A,V),
+  vars_in_args(As,Vs).
+
+%% vars_from(exp,list)
+%% similar to vars, but returns the variable
+%% if expression is a variable
 
 vars_from_ls([],[]).
 vars_from_ls([A|As],Vars) :-
@@ -126,4 +148,11 @@ vars_from_conds([C|Cs],Vars) :-
   vars_from_cond(C,CVars),
   vars_from_conds(Cs,CsVars),
   append(CVars,CsVars,Vars).
+
+%% zip(list1,list2,zip_list)
+%% creates a list of pairs of elements from two lists
+
+zip([],[],[]).
+zip([H1|T1],[H2|T2],[(H1,H2)|Rest]) :-
+  zip(T1,T2,Rest).
 
