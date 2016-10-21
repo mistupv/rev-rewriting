@@ -2,7 +2,7 @@
 :- use_module(parser).
 :- use_module(trs).
 
-:- use_module(library(tokenize)).
+:- use_module(tokenize).
 
 :- dynamic(fresh_vars/1).
 
