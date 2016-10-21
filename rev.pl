@@ -7,8 +7,8 @@
 :- dynamic(fresh_vars/1).
 
 
-parse :- 
-  tokenize_file('example.trs',Tokens,[cased(true),spaces(false),to(strings)]),
+fscd(File) :- 
+  tokenize_file(File,Tokens,[cased(true),spaces(false),to(strings)]),
   lists:subtract(Tokens,[cntrl("\n")],CleanToks),
   %write(CleanToks). % for tokenizer debugging
   phrase(program(T),CleanToks),
