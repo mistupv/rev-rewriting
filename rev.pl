@@ -375,7 +375,7 @@ extract_from_tuple(tuple(T1,T2),T3) :-
 
 fresh_var(Var) :-
   \+ fresh_vars(_),!,
-  Nvar = "X_0",
+  Nvar = "x_0",
   Var = var(Nvar,[]),
   assertz(fresh_vars([Nvar])).
 
@@ -393,7 +393,7 @@ fresh_var(Var) :-
   assertz(fresh_vars(NewLs)).
 
 split_fresh(Str,N) :-
-  string_concat("X_",N,Str).
+  string_concat("x_",N,Str).
 
 %% is_basic(exp)
 %% true if expression is basic
