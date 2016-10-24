@@ -7,6 +7,9 @@ writeRules([R|Rs]) :-
   writeln(R),
   writeRules(Rs).
 
+%% pos(term,pos)
+%% returns the set of positions of a term
+
 pos(_,[]).
 pos(cons(_,X), [P|Ps]) :-
   nth1(P,X,T),
@@ -14,6 +17,11 @@ pos(cons(_,X), [P|Ps]) :-
 pos(funs(_,X), [P|Ps]) :-
   nth1(P,X,T),
   pos(T,Ps).
+
+%% pretty(trs_object)
+%% pretty printing of a trs_object
+%% a trs_object can be a trs or a component of a trs
+%% (rules, defined symbols, variables...)
 
 pretty(ctrs(_,R)) :-
   pretty(R),
