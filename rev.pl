@@ -7,6 +7,28 @@
 :- dynamic(fresh_vars/1).
 
 
+%% fscd(filename)
+%% fscd is the main rule of this package
+%% filename must be an atom containing the name of a .trs file
+%% fscd performs the following computations:
+%%   * extracts the list of tokens (Tokens) from the file
+%%     (with help from tokenizer.pl)
+%%   * removes unwanted tokens from Tokens (CleanTokens)
+%%   * generates the data structure (T, a CTRS) by parsing
+%%      (phrase) the list of tokens with the DCG specified in parser.pl
+%%   * performs a post-processing of the parsed structured, labeling
+%%      terms as defined symbols, constructors or variables (PT)
+%%   * applies a flattening step to PT so that the DCTRS becomes a
+%%     basic DCTRS (more details at "flatten_ctrs" rule)
+%%   * applies a normalization step to FT so that the basic DCTRS  
+%%     becomes a basic c-DCTRS (more details at "cons_ctrs" rule)
+%%   * performs the injectivization transformation, which embeds the
+%%     history of computation into the rules on the system
+%%   * executes the inversion transformation, resulting in a system that
+%%     performs backward computation steps w.r.t. the injectivized one
+%%
+%% the resulting systems are (pretty-)printed at each step
+
 fscd(File) :- 
   tokenize_file(File,Tokens,[cased(true),spaces(false),to(strings)]),
   lists:subtract(Tokens,[cntrl("\n")],CleanToks),
@@ -50,7 +72,12 @@ funs_ctrs([],[]).
 funs_ctrs([rule(_,term(F,_),_,_)|Rs],[F|Fs]) :-
   funs_ctrs(Rs,Fs).
 
-% post/4
+%% post(in_trs,[var_name],[sym_name],out_trs)
+%% performs the post-processing of a CTRS
+%% var_name and sym_name are the defined variables and function symbols
+%% these are used to correctly label terms as variables, functions or
+%% (else) constructors
+
 post([],_,_,[]).
 post(ctrs(X,Y),Vs,Fs,ctrs(X,Y2)) :-
   post(Y,Vs,Fs,Y2).
@@ -73,7 +100,10 @@ post(cond(X,Y),Vs,Fs,cond(X2,Y2)) :-
   post(X,Vs,Fs,X2),
   post(Y,Vs,Fs,Y2).
 
-% post/5
+%% post(in_rule,[var_name],[sym_name],out_rule,integer)
+%% same as post/4, but limits its application to rules
+%% this allows us to label the system rules (beta)
+
 post([],_,_,[],_).
 post(beta(void),_,_,beta(N),N).
 post([R|Rs],Vs,Fs,[R2|Rs2],N1) :-
@@ -86,6 +116,9 @@ post(rule(B,X,Y,Z),Vs,Fs,rule(B2,X2,Y2,Z2),N) :-
   post(Z,Vs,Fs,Z2),
   post(B,Vs,Fs,B2,N).
 
+%% flatten_ctrs(input_trs,output_trs)
+%% applies a flattening step to a given CTRS
+
 flatten_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
   flatten_rules(R,R2).
 
@@ -94,6 +127,8 @@ flatten_rules([R|Rs],[R2|Rs2]) :-
   flatten_rule(R,R2),
   flatten_rules(Rs,Rs2).
 
+% new conditions from flattening the rhs of the
+% rule are appended to the rest of conditions
 flatten_rule(rule(B,L,R,C),rule(B,L,R2,C3)) :-
   flatten_rhs(R,R2,NewCs),
   append(C,NewCs,C2),
@@ -101,6 +136,11 @@ flatten_rule(rule(B,L,R,C),rule(B,L,R2,C3)) :-
 
 flatten_rhs(T,T2,Cs) :-
   flatten_top(T,T2,Cs).
+
+%% flatten_top(in_exp,out_exp,out_conds)
+%% starts the flattening of an expression and returns
+%% the resulting expression and conditions
+%% the expression should be flattened only if needed
 
 flatten_top(T,T,[]) :-
   T = fun(_,_),
@@ -122,6 +162,11 @@ flatten_top(T,T2,Cs) :-
   flatten_bot(Ts,Ts2,Cs),
   T2 = cons(N,Ts2).
 
+%% flatten_bot(in_exp,out_exp,out_conds)
+%% applies a flattening step on the arguments of an expression
+%% this way, non-flattened expression will be replaced variables
+%% as soon as they are found (i.e., we don't go deeper in the
+%% expression)
 
 flatten_bot([],[],[]).
 flatten_bot([T|Ts],[T|Ts2],Cs) :-
@@ -144,6 +189,30 @@ flatten_bot(T,T2,C) :-
 flatten_bot(T,T,[]) :-
   T = var(_,_).
 
+%% flatten_conds(in_conds,out_conds)
+%% when flattening a set of conditions, the new conditions
+%% must be inserted before the generating conditions, and
+%% these new conditions should be flattened as well
+
+flatten_conds([],[]).
+flatten_conds([C|Cs],Cs4) :-
+  flatten_cond(C,C2,NewCs),
+  flatten_conds(NewCs,NewCs2),
+  flatten_conds(Cs,Cs3),
+  append(NewCs2,[C2],NewCs3),
+  append(NewCs3,Cs3,Cs4).
+
+flatten_cond(cond(X,Y),cond(X2,Y2),Cs) :-
+  flatten_top(X,X2,NewCs),
+  flatten_top(Y,Y2,NewCs2),
+  append(NewCs,NewCs2,Cs).
+
+
+%% cons_ctrs(in_trs,out_trs)
+%% applies a normalization step to a CTRS,
+%% converting a basic CTRS into a basic c-CTRS
+%% this ensures that lhs of the conditions are basic
+
 cons_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
   cons_rules(R,R2).
 
@@ -155,6 +224,12 @@ cons_rules([R|Rs],Rs2) :-
   cons_rule(R,_,failure),
   cons_rules(Rs,Rs2).
 
+% For each condition with a nonbasic term on the
+% lhs of the condition, we try to unify both parts
+% of the condition and:
+%   * if we fail, we remove the whole rule
+%   * if we are succesful, we remove the condition
+%     and apply the mgu to the rest of the rule
 cons_rule(rule(B,L,R,C),rule(B,L,R,C),success) :-
   replace_conds(C,C,success([])).
 cons_rule(rule(B,L,R,C),rule(B,L3,R3,C4),Res2) :-
@@ -165,12 +240,6 @@ cons_rule(rule(B,L,R,C),rule(B,L3,R3,C4),Res2) :-
   cons_rule(rule(B,L2,R2,C3),rule(B,L3,R3,C4),Res2).
 cons_rule(rule(_,_,_,C),_,failure) :-
   replace_conds(C,_,failure).
-
-substitute_conds(_,[],[]).
-substitute_conds(Subs,[cond(L,R)|Cs],[cond(L2,R2)|Cs2]) :-
-  substitute(Subs,L,L2),
-  substitute(Subs,R,R2),
-  substitute_conds(Subs,Cs,Cs2).
 
 replace_conds([],[],success([])).
 replace_conds([cond(L,R)|Cs],[cond(L,R)|Cs2],Res) :-
@@ -187,6 +256,15 @@ replace_conds([cond(L,R)|Cs],Cs,success(Subs)) :-
   \+ is_basic(L),
 %  is_cons(R),
   unify([(L,R)],success(Subs)).
+
+substitute_conds(_,[],[]).
+substitute_conds(Subs,[cond(L,R)|Cs],[cond(L2,R2)|Cs2]) :-
+  substitute(Subs,L,L2),
+  substitute(Subs,R,R2),
+  substitute_conds(Subs,Cs,Cs2).
+
+%% inj_ctrs(in_trs,out_trs)
+%% applies the injectivization transformation a basic c-DCTRS
 
 inj_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
   inj_rules(R,R2).
@@ -226,6 +304,11 @@ erased_lhs_vars(L,R,C,ELVars) :-
   append(VarsR,VarsC,VarsRC),
   subtract(VarsL,VarsRC,ELVars).
 
+%% erased_cond_vars(rhs,[cond],erased_vars)
+%% This method computes the erased variables from the conditions
+%% in an efficient way (i.e., it doesn't compute Var(\ol{s_{i+1,n}})
+%% on each condition, but only once)
+
 erased_cond_vars(_,[],[]).
 erased_cond_vars(R,C,ECVars) :-
   vars_from(R,RVars),       % Var(r)  
@@ -255,6 +338,9 @@ erased_cond_lhs([cond(_,T)|Cs],[SRVars|NSRVars],REVars) :-
   subtract(TVars,SRVars,EVars),
   erased_cond_lhs(Cs,NSRVars,NEVars),
   append(EVars,NEVars,REVars).
+
+%% inv_ctrs(in_trs,out_trs)
+%% applies the inversion transformation a basic c-DCTRS
 
 inv_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
   inv_rules(R,R2).
@@ -309,29 +395,20 @@ fresh_var(Var) :-
 split_fresh(Str,N) :-
   string_concat("X_",N,Str).
 
-flatten_conds([],[]).
-flatten_conds([C|Cs],Cs4) :-
-  flatten_cond(C,C2,NewCs),
-  flatten_conds(NewCs,NewCs2),
-  flatten_conds(Cs,Cs3),
-  append(NewCs2,[C2],NewCs3),
-  append(NewCs3,Cs3,Cs4).
-
-flatten_cond(cond(X,Y),cond(X2,Y2),Cs) :-
-  flatten_top(X,X2,NewCs),
-  flatten_top(Y,Y2,NewCs2),
-  append(NewCs,NewCs2,Cs).
-
+%% is_basic(exp)
+%% true if expression is basic
 is_basic(fun(_,Ts)) :-
   is_cons_list(Ts).
+
+%% is_cons(exp)
+%% true if expression is constructor
+is_cons(var(_,_)).
+is_cons(cons(_,[])).
+is_cons(cons(_,[T|Ts])) :-
+  is_cons_list([T|Ts]).
 
 is_cons_list([]).
 is_cons_list([T|Ts]) :-
   is_cons(T),
   is_cons_list(Ts).
-
-is_cons(var(_,_)).
-is_cons(cons(_,[])).
-is_cons(cons(_,[T|Ts])) :-
-  is_cons_list([T|Ts]).
 
