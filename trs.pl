@@ -3,25 +3,12 @@
           substitute/3,
           vars_from/2,
           vars_from_conds/2,
-          is_3ctrs/1]).
+          is_3ctrs/1,
+          is_cons_ctrs/1,
+          is_dctrs/1]).
 
 %% is_3ctrs(ctrs)
 %% checks if ctrs is a 3-CTRS
-
-is_3ctrs(ctrs(_,rules(R))) :-
-  is_3ctrs_rules(R).
-
-is_3ctrs_rules([]).
-is_3ctrs_rules([R|Rs]) :-
-  is_3ctrs_rule(R),
-  is_3ctrs_rules(Rs).
-
-is_3ctrs_rule(rule(_,L,R,C)) :-
-  vars_from(L,LVars),
-  vars_from(R,RVars),
-  vars_from_conds(C,CVars),
-  append(LVars,CVars,LCVars),
-  included(RVars,LCVars).
 
 is_3ctrs(ctrs(_,rules(R))) :-
   is_3ctrs_rules(R).
@@ -51,6 +38,29 @@ is_cons_rules([R|Rs]) :-
 
 is_cons_rule(rule(_,L,_,_)) :-
   is_basic(L).
+
+%% is_dctrs(ctrs)
+%% checks if ctrs is deterministic
+
+is_dctrs(ctrs(_,rules(R))) :-
+  is_dctrs_rules(R).
+
+is_dctrs_rules([]).
+is_dctrs_rules([R|Rs]) :-
+  is_dctrs_rule(R),
+  is_dctrs_rules(Rs).
+
+is_dctrs_rule(rule(_,L,_,C)) :-
+  vars_from(L,LVars),
+  is_dctrs_conds(C,LVars).
+
+is_dctrs_conds([],_).
+is_dctrs_conds([cond(L,R)|Cs],AccVars) :-
+  vars_from(L,LVars),
+  included(LVars,AccVars),
+  vars(R,RVars),
+  append(AccVars,RVars,NewAccVars),
+  is_dctrs_conds(Cs,NewAccVars).
 
 %% unify([equation_pair],unif_result)
 %% tries to unify the equation pairs from a list
