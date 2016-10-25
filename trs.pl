@@ -38,6 +38,20 @@ is_3ctrs_rule(rule(_,L,R,C)) :-
   append(LVars,CVars,LCVars),
   included(RVars,LCVars).
 
+%% is_cons_ctrs(ctrs)
+%% checks if ctrs is constructor
+
+is_cons_ctrs(ctrs(_,rules(R))) :-
+  is_cons_rules(R).
+
+is_cons_rules([]).
+is_cons_rules([R|Rs]) :-
+  is_cons_rule(R),
+  is_cons_rules(Rs).
+
+is_cons_rule(rule(_,L,_,_)) :-
+  is_basic(L).
+
 %% unify([equation_pair],unif_result)
 %% tries to unify the equation pairs from a list
 %% and returns the mgu if unification is possible
