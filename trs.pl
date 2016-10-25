@@ -2,7 +2,41 @@
          [unify/2,
           substitute/3,
           vars_from/2,
-          vars_from_conds/2]).
+          vars_from_conds/2,
+          is_3ctrs/1]).
+
+%% is_3ctrs(ctrs)
+%% checks if ctrs is a 3-CTRS
+
+is_3ctrs(ctrs(_,rules(R))) :-
+  is_3ctrs_rules(R).
+
+is_3ctrs_rules([]).
+is_3ctrs_rules([R|Rs]) :-
+  is_3ctrs_rule(R),
+  is_3ctrs_rules(Rs).
+
+is_3ctrs_rule(rule(_,L,R,C)) :-
+  vars_from(L,LVars),
+  vars_from(R,RVars),
+  vars_from_conds(C,CVars),
+  append(LVars,CVars,LCVars),
+  included(RVars,LCVars).
+
+is_3ctrs(ctrs(_,rules(R))) :-
+  is_3ctrs_rules(R).
+
+is_3ctrs_rules([]).
+is_3ctrs_rules([R|Rs]) :-
+  is_3ctrs_rule(R),
+  is_3ctrs_rules(Rs).
+
+is_3ctrs_rule(rule(_,L,R,C)) :-
+  vars_from(L,LVars),
+  vars_from(R,RVars),
+  vars_from_conds(C,CVars),
+  append(LVars,CVars,LCVars),
+  included(RVars,LCVars).
 
 %% unify([equation_pair],unif_result)
 %% tries to unify the equation pairs from a list
@@ -156,3 +190,10 @@ zip([],[],[]).
 zip([H1|T1],[H2|T2],[(H1,H2)|Rest]) :-
   zip(T1,T2,Rest).
 
+%% included(set1,set2)
+%% Checks if the elements from set1 are included in set2
+
+included([],_).
+included([Elem|Rest],Set) :-
+  member(Elem,Set),
+  included(Rest,Set).
