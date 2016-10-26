@@ -30,29 +30,55 @@
 %% the resulting systems are (pretty-)printed at each step
 
 fscd(File) :- 
+  read_ctrs(File,Ctrs),
+  run_checks(Ctrs,success),
+  apply_transforms(Ctrs).
+
+
+fscd(File) :-
+  read_ctrs(File,Ctrs),
+  run_checks(Ctrs,failure),!.
+
+read_ctrs(File,PostCtrs) :-
   tokenize_file(File,Tokens,[cased(true),spaces(false),to(strings)]),
-  lists:subtract(Tokens,[cntrl("\n")],CleanToks),
-  %write(CleanToks). % for tokenizer debugging
-  phrase(program(T),CleanToks),
-  vars_ctrs(T,Vs),
-  funs_ctrs(T,Fs),
-  post(T,Vs,Fs,PT),
-  is_3ctrs(PT),
-  is_cons_ctrs(PT),
-  is_dctrs(PT),
-  pretty(PT),
+  lists:subtract(Tokens,[cntrl("\n")],CleanTokens),
+  phrase(program(CleanCtrs),CleanTokens),
+  vars_ctrs(CleanCtrs,Vars),
+  funs_ctrs(CleanCtrs,Funs),
+  post(CleanCtrs,Vars,Funs,PostCtrs),!.
+
+run_checks(Ctrs,success) :-
+  is_3ctrs(Ctrs),
+  is_cons_ctrs(Ctrs),
+  is_dctrs(Ctrs),!.
+
+run_checks(Ctrs,failure) :-
+  \+ is_3ctrs(Ctrs),
+  format("Error: the input CTRS is not a 3-CTRS"),nl.
+
+run_checks(Ctrs,failure) :-
+  \+ is_cons_ctrs(Ctrs),
+  format("Error: the input CTRS is not a constructor CTRS"),nl.
+
+run_checks(Ctrs,failure) :-
+  \+ is_cons_ctrs(Ctrs),
+  format("Error: the input CTRS is not a DCTRS"),nl.
+
+apply_transforms(Ctrs) :-
+  format("Input CTRS:"),nl,
+  pretty(Ctrs),
   format("Flattened TRS:"),nl,
-  flatten_ctrs(PT,FT),
-  pretty(FT),
+  flatten_ctrs(Ctrs,FlatCtrs),
+  pretty(FlatCtrs),
   format("Constructor TRS:"),nl,
-  cons_ctrs(FT,CT),
-  pretty(CT),
+  cons_ctrs(FlatCtrs,ConsCtrs),
+  pretty(ConsCtrs),
   format("Injectivized TRS:"),nl,
-  inj_ctrs(CT,InjT),
-  pretty(InjT),
+  inj_ctrs(ConsCtrs,InjCtrs),
+  pretty(InjCtrs),
   format("Inverted TRS:"),nl,
-  inv_ctrs(InjT,InvT),
-  pretty(InvT).
+  inv_ctrs(InjCtrs,InvCtrs),
+  pretty(InvCtrs),!.
 
 assertTRS(ctrs(_,R)) :-
   R = rules(Rs),
@@ -119,7 +145,7 @@ post(rule(B,X,Y,Z),Vs,Fs,rule(B2,X2,Y2,Z2),N) :-
   post(Z,Vs,Fs,Z2),
   post(B,Vs,Fs,B2,N).
 
-%% flatten_ctrs(input_trs,output_trs)
+%% flatten_ctrs(in_trs,out_trs)
 %% applies a flattening step to a given CTRS
 
 flatten_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
