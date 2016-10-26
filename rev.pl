@@ -11,21 +11,18 @@
 %% fscd is the main rule of this package
 %% filename must be an atom containing the name of a .trs file
 %% fscd performs the following computations:
-%%   * extracts the list of tokens (Tokens) from the file
-%%     (with help from tokenizer.pl)
-%%   * removes unwanted tokens from Tokens (CleanTokens)
-%%   * generates the data structure (T, a CTRS) by parsing
-%%      (phrase) the list of tokens with the DCG specified in parser.pl
-%%   * performs a post-processing of the parsed structured, labeling
-%%      terms as defined symbols, constructors or variables (PT)
-%%   * applies a flattening step to PT so that the DCTRS becomes a
-%%     basic DCTRS (more details at "flatten_ctrs" rule)
-%%   * applies a normalization step to FT so that the basic DCTRS  
-%%     becomes a basic c-DCTRS (more details at "cons_ctrs" rule)
-%%   * performs the injectivization transformation, which embeds the
-%%     history of computation into the rules on the system
-%%   * executes the inversion transformation, resulting in a system that
-%%     performs backward computation steps w.r.t. the injectivized one
+%%   * first, it reads the CTRS from a file and processes it
+%%   * later, it runs some checks on the CTRS
+%%     * if these checks fail, it finishes
+%%   * otherwise, it applies a series of transformations:
+%%     * a flattening step so that the CTRS becomes a
+%%       basic CTRS (more details at "flatten_ctrs" rule)
+%%     * a normalization step so that the basic CTRS
+%%       becomes a basic c-CTRS (more details at "cons_ctrs" rule)
+%%     * an injectivization transformation, which embeds the
+%%       history of computation into the rules on the system
+%%     * an inversion transformation, resulting in a system that
+%%       performs backward computation steps w.r.t. the injectivized one
 %%
 %% the resulting systems are (pretty-)printed at each step
 
@@ -39,6 +36,17 @@ fscd(File) :-
   read_ctrs(File,Ctrs),
   run_checks(Ctrs,failure),!.
 
+%% read_ctrs(file,out_trs)
+%% reads and processes the structure of CTRS from a given file
+%% concretely, it does the following:
+%%   * extracts the list of tokens (Tokens) from the file
+%%     (with help from tokenizer.pl)
+%%   * removes unwanted tokens from Tokens (CleanTokens)
+%%   * generates the data structure CleanCtrs by parsing (phrase)
+%%     the list of tokens with the DCG specified in parser.pl
+%%   * performs a post-processing of the parsed structured, labeling
+%%      terms as defined symbols, constructors or variables (Ctrs)
+
 read_ctrs(File,PostCtrs) :-
   tokenize_file(File,Tokens,[cased(true),spaces(false),to(strings)]),
   lists:subtract(Tokens,[cntrl("\n")],CleanTokens),
@@ -46,6 +54,10 @@ read_ctrs(File,PostCtrs) :-
   vars_ctrs(CleanCtrs,Vars),
   funs_ctrs(CleanCtrs,Funs),
   post(CleanCtrs,Vars,Funs,PostCtrs),!.
+
+%% run_checks(in_trs,bool)
+%% returns 'success' if input CTRS is valid
+%% otherwise, it prints an error message and returns 'failure'
 
 run_checks(Ctrs,success) :-
   is_3ctrs(Ctrs),
@@ -63,6 +75,9 @@ run_checks(Ctrs,failure) :-
 run_checks(Ctrs,failure) :-
   \+ is_cons_ctrs(Ctrs),
   format("Error: the input CTRS is not a DCTRS"),nl.
+
+%% apply_transforms(in_trs)
+%% applies a series of transformations to a given CTRS
 
 apply_transforms(Ctrs) :-
   format("Input CTRS:"),nl,
