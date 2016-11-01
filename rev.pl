@@ -257,8 +257,33 @@ flatten_cond(cond(X,Y),cond(X2,Y2),Cs) :-
 %% converting a basic CTRS into a basic c-CTRS
 %% this ensures that lhs of the conditions are basic
 
-cons_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R2))) :-
-  cons_rules(R,R2).
+cons_ctrs(ctrs(V,rules(R)),ctrs(V,rules(R3))) :-
+  flatten_rhs_rules(R,R2),
+  cons_rules(R2,R3).
+
+%% flatten_rhs_rules(in_rules,out_rules)
+%% applies a previous flattening step to rhs of
+%% the rules so that they become constructor terms.
+%% this is required since generic flattening does
+%% not ensure that rhs is constructor
+flatten_rhs_rules([],[]).
+flatten_rhs_rules([R|Rs],[R2|Rs2]) :-
+  flatten_rhs_rule(R,R2),
+  flatten_rhs_rules(Rs,Rs2).
+
+flatten_rhs_rule(rule(B,L,R,Cs),rule(B,L,R2,NewCs)) :-
+  flatten_rhs_cons(R,R2,NewC),
+  append(Cs,NewC,NewCs).
+
+flatten_rhs_cons(T,T2,Cs) :-
+  \+ is_basic(T),
+  flatten_top(T,T2,Cs).
+
+flatten_rhs_cons(T,Var,Cs) :-
+  is_basic(T),
+  fresh_var(Var),
+  Cs = [cond(T,Var)].
+
 
 cons_rules([],[]).
 cons_rules([R|Rs],[R2|Rs2]) :-
