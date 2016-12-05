@@ -77,7 +77,6 @@ fscd(File) :-
   run_checks(Ctrs,success),
   apply_transforms(Ctrs).
 
-
 fscd(File) :-
   read_ctrs(File,Ctrs),
   run_checks(Ctrs,failure),!.
