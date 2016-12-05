@@ -1,0 +1,7 @@
+(VAR x y w z)
+(RULES
+
+  f(x,y) -> z | h(y) -> w, first(x,w) -> z
+  h(0) -> 0
+  first(x,y) -> x
+)

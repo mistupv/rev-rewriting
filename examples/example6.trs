@@ -1,0 +1,8 @@
+(VAR x y)
+(RULES
+
+  a(0,y) -> y
+  a(s(x),y) -> s(a(x,y))
+  m(0,y) -> 0
+  m(s(x),y) -> a(m(x,y),y)
+)

@@ -1,0 +1,5 @@
+(VAR x y)
+(RULES
+
+  snd(x,y) -> y
+)
