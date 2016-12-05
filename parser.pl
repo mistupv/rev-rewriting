@@ -2,7 +2,8 @@
          [program/3]).
 
 :- use_module(library(dcg/basics)).
-:- use_module(library(tokenize)).
+
+:- use_module(tokenize).
 
 program(X) -->
   decl_ast(Y),
