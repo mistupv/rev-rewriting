@@ -5,6 +5,53 @@
 
 :- dynamic(fresh_vars/1).
 
+main :- 
+    prolog_flag(argv,ArgV),
+    get_options(ArgV,Options,_RemArgV), !,
+    %(member(verbose,Options) -> (assert_verbose, print(Options),nl)
+    %  ; (member(very_verbose,Options) -> (assert_verbose,assert_very_verbose, print(Options),nl) ; true)),
+    ((member(file(File),Options), assert(cli_initial_file(File)),fail)
+     ; true),
+    main_cli.
+
+:- dynamic cli_initial_file/1.
+:- dynamic cli_option/1.
+
+main_cli :-
+  cli_initial_file(File),
+  !,
+  fscd(File).
+
+get_options([],Rec,Rem) :- !,Rec=[],Rem=[].
+get_options(Inputs,RecognisedOptions,RemOptions) :-
+   (recognise_option(Inputs,Flag,RemInputs)
+     -> (RecognisedOptions = [Flag|RecO2], 
+         assert(cli_option(Flag)), %%print(Flag),nl,
+         RemO2 = RemOptions)
+     ;  (Inputs = [H|RemInputs], RemOptions = [H|RemO2], RecO2 = RecognisedOptions)
+   ),
+   get_options(RemInputs,RecO2,RemO2).
+
+recognise_option(Inputs,Flag,RemInputs) :-
+   recognised_option(Heads,Flag),
+   append(Heads,RemInputs,Inputs).
+   
+recognised_option(['-file',NT],file(NT)).
+
+%:- use_module(library(codesio)).
+
+
+/*
+convert_entry_to_term(CLIGOAL,Term) :-
+   on_exception(Exception,
+      (atom_codes(CLIGOAL,Codes),
+       read_from_chars(Codes,Term)),
+      (nl,print('### Illegal Command-Line Goal: "'), print(CLIGOAL),print('"'),nl,
+       format("### Use following format: \"Goal.\"~n",[]),
+       print('### Exception: '), print(Exception),nl,
+       halt)
+     ).
+*/     
 
 %% fscd(filename)
 %% fscd is the main rule of this package
@@ -29,6 +76,7 @@ fscd(File) :-
   read_ctrs(File,Ctrs),
   run_checks(Ctrs,success),
   apply_transforms(Ctrs).
+
 
 fscd(File) :-
   read_ctrs(File,Ctrs),
