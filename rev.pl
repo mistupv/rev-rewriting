@@ -31,7 +31,6 @@ fscd(File) :-
   run_checks(Ctrs,success),
   apply_transforms(Ctrs).
 
-
 fscd(File) :-
   read_ctrs(File,Ctrs),
   run_checks(Ctrs,failure),!.
@@ -73,7 +72,7 @@ run_checks(Ctrs,failure) :-
   format("Error: the input CTRS is not a constructor CTRS"),nl.
 
 run_checks(Ctrs,failure) :-
-  \+ is_cons_ctrs(Ctrs),
+  \+ is_dctrs(Ctrs),
   format("Error: the input CTRS is not a DCTRS"),nl.
 
 %% apply_transforms(in_trs)
