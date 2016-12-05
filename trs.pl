@@ -58,7 +58,7 @@ is_dctrs_conds([],_).
 is_dctrs_conds([cond(L,R)|Cs],AccVars) :-
   vars_from(L,LVars),
   included(LVars,AccVars),
-  vars(R,RVars),
+  vars_from(R,RVars),
   append(AccVars,RVars,NewAccVars),
   is_dctrs_conds(Cs,NewAccVars).
 
