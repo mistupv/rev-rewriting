@@ -5,10 +5,7 @@ A tool written in Prolog for the transformation of an irreversible Term Rewritin
 ### Dependencies
 
 This tool uses the [tokenize library](https://github.com/aBathologist/tokenize).
-You can install it from SWI-Prolog with the command:
-```
-?- pack_install(tokenize).
-```
+You do not need to install it since it is already included on the project.
 
 ### How to use
 
