@@ -1,0 +1,10 @@
+(VAR x y)
+(RULES
+
+  add(0,y) -> y
+  add(s(x),y) -> s(add(x,y))
+  fst(x,y) -> x
+  double(x) -> add(x,x) | even(x) -> true
+  even(0) -> true
+  even(s(s(x))) -> even(x)
+)

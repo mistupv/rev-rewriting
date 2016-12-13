@@ -1,0 +1,7 @@
+(VAR x y xs ys)
+(RULES
+
+  zip(nil,ys) -> nil
+  zip(xs, nil) -> nil
+  zip(cons(x,xs),cons(y,ys)) -> cons(pair(x,y),zip(xs,ys))
+)

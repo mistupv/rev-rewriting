@@ -1,0 +1,8 @@
+(VAR x y)
+(RULES
+
+  add(0,y) -> y
+  add(s(x),y) -> s(add(x,y))
+  mult(0,y) -> 0
+  mult(s(x),y) -> add(mult(x,y),y)
+)

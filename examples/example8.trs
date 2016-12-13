@@ -1,8 +1,0 @@
-(VAR x y m w)
-(RULES
-
-  f(x,y,m) -> w | h(x) -> x, g(y,4) -> w
-  h(0) -> 0
-  h(1) -> 1
-  g(x,y) -> x
-)
