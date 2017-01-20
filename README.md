@@ -17,7 +17,7 @@ Then, call the main rule (`fscd/1`) with the path to your .trs file (an atom).
 
 For instance, to use the example TRS [AProVE webpage](http://aprove.informatik.rwth-aachen.de/help_new/trs.html#trs):
 ```
-?- fscd('examples/aprove.trs').
+?- fscd('examples/ackermann.trs').
 ```
 The program will start its execution and print the transformed systems at each step.
 
